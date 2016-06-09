@@ -15,26 +15,26 @@ outwords = []
 # Output the source corpus sentence list
 with open("data/outSentences.txt", "w") as sourceSentences:
 
-	for sentence in corpusSentences:
-		sourceSentences.write(" ".join(map(lambda j: j[0], sentence)) + "\n");
-		outwords += sentence
+    for sentence in corpusSentences:
+        sourceSentences.write(" ".join(map(lambda j: j[0], sentence)) + "\n")
+        outwords += sentence
 
 
 # Output the ngrammized sentence list
 with open("data/outNgrammized.txt", "w") as ngrSentences:
 
-	for sentence in ngrammizedSentences:
-		ngrSentences.write(" ".join(map(lambda j: j[0], sentence)) + "\n");
-		outwords += filter(lambda w: "_" in w[0], sentence);
+    for sentence in ngrammizedSentences:
+        ngrSentences.write(" ".join(map(lambda j: j[0], sentence)) + "\n")
+        outwords += filter(lambda w: "_" in w[0], sentence)
 
 
 # Output counters
 with open("data/outCounters.txt", "w") as counters:
 
-	wordcount = Counter(outwords);
+    wordcount = Counter(outwords)
 
-	for c in wordcount:
-		counters.write(c[0] + " " + c[1] + " " + str(wordcount[c]) + "\n")
+    for c in wordcount:
+        counters.write(c[0] + " " + c[1] + " " + str(wordcount[c]) + "\n")
 
 
 print('Generating context vectors...')
