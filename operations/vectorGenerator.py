@@ -1,74 +1,67 @@
-from collections import Counter
+from collections import Counter, defaultdict
+#from tokenizer import *
 
 
-def build_context_vector(sentences, max_offset):
+def build_context_vector(list_of_sentences, max_offset):
     """Creates the context vector
         with max_offset words to the left
         and to the right counted"""
 
-    vectors = {}
+    context_vectors = defaultdict(lambda: Counter())
 
     resetProgress()
 
-    for words in sentences:
+    for sentence in list_of_sentences:
 
         printProgress(1000)
 
         # iteration through every word of the sentence
-        for word_index in range(0, len(words)):
+        for i in range(0, len(sentence)):
 
-            current_word = words[word_index][0]
+            word = sentence[i][0]
 
-            # if current_word hasn't appeared yet, initialize its counter
-            if current_word not in vectors.keys():
-                vectors[current_word] = Counter()
+            # get this word's counter from the dictionary
+            current_counter = context_vectors[word]
 
-            # getting the current counter from the dictionary
-            current_counter = vectors[current_word]
-
+            # count the context words
             for offset in range(1, max_offset + 1):
 
-                # checking if the context word can be indexed
-                if word_index-offset > 0:
-                    current_counter.update([words[word_index-offset]])
+                # check if the context word can be indexed
+                if i-offset > 0:
+                    current_counter.update([sentence[i-offset]])
 
-                if word_index+offset < len(words):
-                    current_counter.update([words[word_index+offset]])
+                if i+offset < len(sentence):
+                    current_counter.update([sentence[i+offset]])
 
-    return vectors
+    return context_vectors
 
 
 def save_context_vector(vectors, filename):
     """Saves the list of context vectors into the specified file"""
 
-    keys = vectors.keys()
-    out = ""
-
-    for key in keys:
-
-        out += key
-        counter = vectors[key]
-
-        for k in counter:
-            out += " " + k + ":" + str(counter[k])
-
-        out += "\n"
-
     with open(filename, "w") as output:
-        output.write(out)
+
+        # for each word in the corpus
+        for word in vectors.keys():
+            line = word
+            freq_counter = vectors[key]
+    
+            # write out each recorded context word along with its frequency
+            for cw in freq_counter:
+                line += " "+cw+":"+str(freq_counter[cw])
+            
+            print(line, file=output)
 
 
 def load_context_vector(filename):
     """Loads context vectors from the specified file"""
 
     vectors = {}
-
     with open(filename) as lines:
-
         for line in lines:
-            if line != '':
-
-                words = line.split()
-                vectors[words[0]] = dict(map(lambda p: (p[0], p[1]), map(lambda w: w.split(':'), filter(lambda w: w.count(':') == 1, words))))
+            if line:
+                head = words[0]
+                d = { w.split(":")[0]: w.split(":")[1] for w in words[1:]}
+                vectors[ head ] = d
 
     return vectors
