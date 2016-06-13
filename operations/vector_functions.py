@@ -39,10 +39,9 @@ def build_context_vectors(list_of_sentences, max_offset, cutoff=1):
             current_counter = context_vectors[word]
 
             # count the context words
-            for offset in range(1, max_offset + 1):
-                to_add = sentence[max(0,i-offset) : i         ] \
-                       + sentence[     i+1        : i+offset+1]
-                current_counter.update(to_add)
+            offset = max_offset
+            to_add = sentence[max(0,i-offset) : i] + sentence[i+1 : i+offset+1]
+            current_counter.update(to_add)
 
     # cut off low frequency words, i.e. remove hapax legomena
     if cutoff>1:
@@ -57,18 +56,18 @@ def build_context_vectors(list_of_sentences, max_offset, cutoff=1):
 def save_context_vectors(context_vectors, output_file):
     """Saves the list of context vectors into the given stream, 
         ignoring words that contain the delimiter"""
-    
+
     # for each word in the corpus
     for word in sorted(context_vectors.keys()):
         line = word
         # context vector is a Counter() with word:frequency
         context_vector = context_vectors[word]
-   
+
         # write out each recorded context word along with its frequency
         for cw in sorted(context_vector):
             if not ":" in cw:
                 line += " "+cw+":"+str(context_vector[cw])
-        
+
         print(line, file=output_file)
 
 

@@ -8,8 +8,11 @@ import sys
 import re
 import itertools
 import io
+from collections import Counter
 import main
+from main import log, get_wordnet_score, unigram_frequencies
 GOLD_RANKINGS_FILENAME = "./test-data/substitutions.gold-rankings"
+NORMALIZE = True
 
 #function to read system produced ranking file
 def getSystemRankings(file):
@@ -85,18 +88,52 @@ def getScore(system, gold):
     return (absoluteAgreement - chanceAgreement)/(1.0 - chanceAgreement)
     
 
-if __name__ == "__main__":
-    
-    #get gold rankings and store in structure
+def grid_search():
+    # get gold rankings and store in structure
     with open(GOLD_RANKINGS_FILENAME) as goldFile:
         gold_rankings = getSystemRankings(goldFile)
+
+    # make sure the necessary files are loaded
+    main.load_the_files(opt=True)
+
+    # get the normalization coefficients
+    if NORMALIZE:
+        swiki_max = max(main.unigram_frequencies.values())
+        #ilen_max = max(list(map(len, unigram_frequencies.keys())))
+        ilen_max = 28   # too much garbage, hard to normalize
+                        # set to 28, for "antidisestablishmentarianism"
+        #wnet_max = max([get_wordnet_score(w) for w in unigram_frequencies])
+        wnet_max = 75   # for "break", given by the above expression
+    else:
+        swiki_max = ilen_max = wnet_max = 1.0
+
+    ilen_range = [1.0, 10.0, 100.0, 1000.0, 100000.0, 1000000.0, 10000000.0]
+    wnet_range = [1.0, 10.0, 100.0, 1000.0, 100000.0, 1000000.0, 10000000.0]
+    swiki_range = [1.0, 10.0, 100.0, 1000.0, 100000.0, 1000000.0, 10000000.0]
+    results = Counter()
+
+    i = 0
+    for ilen_weight in ilen_range:
+        for wnet_weight in wnet_range:
+            for swiki_weight in swiki_range:
+
+                i += 1
+                log("iteration %d/%d"%(i,7*7*7))
+                weights = [ilen_weight/ilen_max,
+                           wnet_weight/wnet_max,
+                           swiki_weight/swiki_max]
+                stream = io.StringIO()
+                main.main( weights=weights, output_stream=stream, opt=True )
+                stream.seek(0)
+                system_rankings = getSystemRankings(stream)
+                score = getScore(system_rankings, gold_rankings)
+                results[tuple(weights)] = score
+                print("Normalized system score for "+str(weights)+":", score)
+
+    log("done")
+    for res in results.most_common(10):
+        print(str(res)+"\t\t"+str(results[res]))
+
+if __name__ == "__main__":
+    grid_search()
     
-    weights = [1.0, 1.0, 1.0]
-    stream = io.StringIO()
-    main.main( weights=weights, output_stream=stream, opt=True )
-    stream.seek(0)
-    system_rankings = getSystemRankings(stream)
-    
-    score = getScore(system_rankings, gold_rankings)
-    
-    print('Normalized system score:', score)

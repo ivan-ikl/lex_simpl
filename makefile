@@ -11,5 +11,8 @@ verbose:
 create:
 	python3 ./main.py test-data/contexts_rectified.xml $(gold_rankings_location)/substitutions > $(output_filename)
 
+process:
+	python3 ./processCorpus.py
+
 #optimize:
 #	python3 ./optimize.py
