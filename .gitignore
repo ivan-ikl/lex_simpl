@@ -1,2 +1,5 @@
 **/__pycache__/
-/data/
+/input_data/
+/output_data/
+/test-data/
+/trial-dataset/
