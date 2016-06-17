@@ -1,15 +1,15 @@
 output_filename := test_output
-gold_rankings_location := test-data
-#gold_rankings_location := trial-dataset
+which_dataset := trial-dataset
+#which_dataset := test-data
 
 test:
-	python3 ./rank-scorer.py -i test_output -g $(gold_rankings_location)/substitutions.gold-rankings
+	python3 ./rank-scorer.py -i test_output -g $(which_dataset)/substitutions.gold-rankings
 
 verbose:
-	python3 ./rank-scorer.py -v -i test_output -g $(gold_rankings_location)/substitutions.gold-rankings
+	python3 ./rank-scorer.py -v -i test_output -g $(which_dataset)/substitutions.gold-rankings
 
 create:
-	python3 ./main.py test-data/contexts_rectified.xml $(gold_rankings_location)/substitutions > $(output_filename)
+	python3 ./main.py $(which_dataset)/contexts_rectified.xml $(which_dataset)/substitutions > $(output_filename)
 
 process:
 	python3 ./processCorpus.py

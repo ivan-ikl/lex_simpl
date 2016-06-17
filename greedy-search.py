@@ -8,11 +8,16 @@ import sys
 import re
 import itertools
 import io
+import time
 from collections import Counter
 import main
 from main import log, get_wordnet_score, unigram_frequencies
 GOLD_RANKINGS_FILENAME = "./test-data/substitutions.gold-rankings"
 NORMALIZE = True
+
+check_range = None
+norm_coefficients = None
+gold_rankings = None
 
 #function to read system produced ranking file
 def getSystemRankings(file):
@@ -88,9 +93,47 @@ def getScore(system, gold):
     return (absoluteAgreement - chanceAgreement)/(1.0 - chanceAgreement)
     
 
-def grid_search():
+def get_neighbors(visited, position):
+    ret = []
+    # enumerate the neighbors
+    for dim in range(len(position)):
+        pos = list(position)
+        ret.append( pos[0:dim] + [pos[dim]+1] + pos[dim+1:] )
+        ret.append( pos[0:dim] + [pos[dim]-1] + pos[dim+1:] )
+
+    # eliminate the impossible ones
+    ret = [pos for pos in ret if not any(map(lambda x:x<0, pos))]
+    ret = [pos for pos in ret if not any(map(lambda x:x>=7, pos))]
+
+    # eliminate the visited ones
+    ret = [x for x in ret if tuple(x) not in visited]
+    ret = list(map(tuple, ret))
+    return ret
+
+
+def evaluate_solution(position):
+    global check_range, norm_coefficients
+
+    # generate weights
+    weights = [check_range[position[i]] for i in range(4)]
+    for i in range(len(weights)):
+        weights[i] /= norm_coefficients[i]
+
+    # evaluate them
+    stream = io.StringIO()
+    main.main( weights=weights, output_stream=stream, opt=True )
+    stream.seek(0)
+    system_rankings = getSystemRankings(stream)
+    score = getScore(system_rankings, gold_rankings)
+    return score
+
+
+def hill_climbing_search():
+
+    log("Started at %s"%time.ctime())
     # get gold rankings and store in structure
     with open(GOLD_RANKINGS_FILENAME) as goldFile:
+        global gold_rankings
         gold_rankings = getSystemRankings(goldFile)
 
     # make sure the necessary files are loaded
@@ -107,33 +150,51 @@ def grid_search():
     else:
         swiki_max = ilen_max = wnet_max = 1.0
 
-    ilen_range = [1.0, 10.0, 100.0, 1000.0, 100000.0, 1000000.0, 10000000.0]
-    wnet_range = [1.0, 10.0, 100.0, 1000.0, 100000.0, 1000000.0, 10000000.0]
-    swiki_range = [1.0, 10.0, 100.0, 1000.0, 100000.0, 1000000.0, 10000000.0]
+    global check_range, norm_coefficients
+    check_range = [1.0, 10.0, 100.0, 1000.0, 100000.0, 1000000.0, 10000000.0]
+    norm_coefficients = [ilen_max, wnet_max, swiki_max, 1.0]
+
     results = Counter()
+    old_position = (0,0,0,0)
 
-    i = 0
-    for ilen_weight in ilen_range:
-        for wnet_weight in wnet_range:
-            for swiki_weight in swiki_range:
+    score = evaluate_solution(old_position)
+    results[old_position] = score
+    print("Normalized system score for "+str(old_position)+":", score)
+    i = 0; j = 1
 
-                i += 1
-                log("iteration %d/%d"%(i,7*7*7))
-                weights = [ilen_weight/ilen_max,
-                           wnet_weight/wnet_max,
-                           swiki_weight/swiki_max]
-                stream = io.StringIO()
-                main.main( weights=weights, output_stream=stream, opt=True )
-                stream.seek(0)
-                system_rankings = getSystemRankings(stream)
-                score = getScore(system_rankings, gold_rankings)
-                results[tuple(weights)] = score
-                print("Normalized system score for "+str(weights)+":", score)
+    while True:
+        i += 1
+        log("%d positions done, %d calculated"%(i,j))
 
-    log("done")
+        # look at the neighbors
+        neighbors = get_neighbors(results, old_position)
+
+        # evaluate them
+        for pos in neighbors:
+            j += 1
+            score = evaluate_solution(pos)
+            results[pos] = score
+            print("\t"+str(pos)+": ", score)
+            log("%d positions done, %d calculated"%(i,j))
+
+        # see if any one of them is better
+        best = results[old_position]
+        new_position = None
+        for pos in neighbors:
+            if results[pos] > best:
+                best = results[pos]
+                new_position = pos
+
+        if new_position:
+            old_position = new_position
+        else:
+            break
+
+    log("done") 
+    print("best result: %s, score is %s" \
+            %(str(old_position), str(results[old_position])))
     for res in results.most_common(10):
-        print(str(res)+"\t\t"+str(results[res]))
+        print("position %s\t\tscore:%s\n"%(str(res[0]), str(res[1])))
 
 if __name__ == "__main__":
-    grid_search()
-    
+    hill_climbing_search()

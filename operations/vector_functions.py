@@ -45,12 +45,17 @@ def build_context_vectors(list_of_sentences, max_offset, cutoff=1):
 
     # cut off low frequency words, i.e. remove hapax legomena
     if cutoff>1:
-        for word in context_vectors.keys():
-            cv = context_vectors[word]
-            temp = Counter({ x:cv[x] for x in cv if cv[x]>=cutoff })
-            context_vectors[word] = temp
+        filter_context_vectors(context_vectors, cutoff)
 
     return context_vectors
+
+
+def filter_context_vectors(context_vectors, cutoff):
+    """Filters out the context words with values strictly below cutoff."""
+    for word in context_vectors.keys():
+        cv = context_vectors[word]
+        temp = Counter({ x:cv[x] for x in cv if cv[x]>=cutoff })
+        context_vectors[word] = temp
 
 
 def save_context_vectors(context_vectors, output_file):
@@ -74,12 +79,15 @@ def save_context_vectors(context_vectors, output_file):
 def load_context_vectors(input_file):
     """Loads context vectors from the specified file"""
 
-    context_vectors = {}
+    context_vectors = defaultdict(lambda:Counter())
     for line in input_file:
         if line:
             words = line.split()
             head = words[0]
-            d = { w.split(":")[0] : int(w.split(":")[1]) for w in words[1:]}
+            d = Counter()
+            for w in words[1:]:
+                word, freq = w.split(":")
+                d[word] = int(freq)
             context_vectors[ head ] = d
 
-    return vectors
+    return context_vectors
