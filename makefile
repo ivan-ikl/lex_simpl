@@ -1,6 +1,6 @@
 output_filename := test_output
-which_dataset := trial-dataset
-#which_dataset := test-data
+#which_dataset := trial-dataset
+which_dataset := test-data
 
 test:
 	python3 ./rank-scorer.py -i test_output -g $(which_dataset)/substitutions.gold-rankings

@@ -125,13 +125,13 @@ def rank(context, candidates, weights=[1.0,1.0,1.0,0.0]):
         score += get_wordnet_score(word) * weights[1]       # wnet_weight
         score += get_simplewiki_score(_word) * weights[2]   # swiki_weight
 
-        local_cv = extract_context_vector(tokenized_context, index, 4)
+        sentence_cv = extract_context_vector(tokenized_context, index, 4)
         if word in ngram_CVs:
             global_cv = ngram_CVs[_word]
         else:
             global_cv = CVs[_word]
 
-        score += get_CV_similarity_score(local_cv, global_cv) * weights[3]
+        score += get_CV_similarity_score(sentence_cv, global_cv) * weights[3]
 
         scores.append( score )
 
@@ -191,7 +191,7 @@ def load_the_files(opt=False):
         log("done loading")
 
 
-def main(weights=[1.0, 1.0, 1.0], output_stream=sys.stdout, opt=False):
+def main(weights=[1.0, 1.0, 1.0, 1.0], output_stream=sys.stdout, opt=False):
      
     global CONTEXTS_FILENAME, CANDIDATES_FILENAME, already_loaded
     global candidates, contexts, unigram_frequencies
