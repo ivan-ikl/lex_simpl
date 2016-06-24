@@ -70,8 +70,7 @@ def save_context_vectors(context_vectors, output_file):
 
         # write out each recorded context word along with its frequency
         for cw in sorted(context_vector):
-            if not ":" in cw:
-                line += " "+cw+":"+str(context_vector[cw])
+            line += " "+cw+" "+str(context_vector[cw])
 
         print(line, file=output_file)
 
@@ -84,10 +83,10 @@ def load_context_vectors(input_file):
         if line:
             words = line.split()
             head = words[0]
-            d = Counter()
-            for w in words[1:]:
-                word, freq = w.split(":")
-                d[word] = int(freq)
+            tail = words[1:]
+            # tail[0::2] are the words found in context
+            # tail[1:.2] are their respective frequencies
+            d = Counter(dict(zip( tail[::2], map(int, tail[1::2]) )))
             context_vectors[ head ] = d
 
     return context_vectors

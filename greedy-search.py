@@ -11,8 +11,8 @@ import io
 import time
 from collections import Counter
 import main
-from main import log, get_wordnet_score, unigram_frequencies
-GOLD_RANKINGS_FILENAME = "./test-data/substitutions.gold-rankings"
+from main import log, get_wordnet_score, unigram_frequencies, dataset_location
+GOLD_RANKINGS_FILENAME = dataset_location+"/substitutions.gold-rankings"
 NORMALIZE = True
 
 check_range = None
@@ -103,7 +103,7 @@ def get_neighbors(visited, position):
 
     # eliminate the impossible ones
     ret = [pos for pos in ret if not any(map(lambda x:x<0, pos))]
-    ret = [pos for pos in ret if not any(map(lambda x:x>=7, pos))]
+    ret = [pos for pos in ret if not any(map(lambda x:x>=8, pos))]
 
     # eliminate the visited ones
     ret = [x for x in ret if tuple(x) not in visited]
@@ -151,7 +151,7 @@ def hill_climbing_search():
         swiki_max = ilen_max = wnet_max = 1.0
 
     global check_range, norm_coefficients
-    check_range = [1.0, 10.0, 100.0, 1000.0, 100000.0, 1000000.0, 10000000.0]
+    check_range = [1.0, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, 10000000.0]
     norm_coefficients = [ilen_max, wnet_max, swiki_max, 1.0]
 
     results = Counter()
@@ -159,7 +159,7 @@ def hill_climbing_search():
 
     score = evaluate_solution(old_position)
     results[old_position] = score
-    print("Normalized system score for "+str(old_position)+":", score)
+    print("\t"+str(old_position)+":", score)
     i = 0; j = 1
 
     while True:
@@ -174,7 +174,7 @@ def hill_climbing_search():
             j += 1
             score = evaluate_solution(pos)
             results[pos] = score
-            print("\t"+str(pos)+": ", score)
+            print("\t"+str(pos)+":", score)
             log("%d positions done, %d calculated"%(i,j))
 
         # see if any one of them is better

@@ -10,8 +10,10 @@ from nltk.stem import WordNetLemmatizer
 from collections import defaultdict, Counter
 from operations import load_context_vectors
 
-CONTEXTS_FILENAME =         "./test-data/contexts_rectified.xml"
-CANDIDATES_FILENAME =       "./test-data/substitutions"
+dataset_location = "./trial-dataset"
+#dataset_location = "./test-data"
+CONTEXTS_FILENAME =         dataset_location+"/contexts_rectified.xml"
+CANDIDATES_FILENAME =       dataset_location+"/substitutions"
 SIMPLEWIKI_FREQS_FILENAME = "./input_data/unigram_frequencies"
 NGRAM_FREQ_FILENAME =       "./input_data/ngram_frequencies"
 CV_FILENAME =               "./input_data/context_vectors"
